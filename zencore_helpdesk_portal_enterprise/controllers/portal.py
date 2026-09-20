@@ -1,8 +1,6 @@
 import base64
 from collections import OrderedDict
-
 from markupsafe import Markup, escape
-
 from odoo import _, http
 from odoo.http import request
 from odoo.addons.portal.controllers import portal

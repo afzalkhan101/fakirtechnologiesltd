@@ -26,11 +26,12 @@ class HelpdeskTicket(models.Model):
             else:
                 ticket.zc_portal_closed = False
 
+
+
     def _zc_portal_stage_domain(self, closed=False):
         self.ensure_one()
         Stage = self.env["helpdesk.stage"].sudo()
         stage_fields = Stage._fields
-
         domain = []
         if "fold" in stage_fields:
             domain.append(("fold", "=", closed))

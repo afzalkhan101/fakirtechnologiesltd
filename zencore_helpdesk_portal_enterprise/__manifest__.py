@@ -1,5 +1,5 @@
 {
-    "name": "Zencore Helpdesk Portal - Enterprise",
+    "name": "Zencore Helpdesk Portal",
     "summary": "Customer portal for Odoo 19 Enterprise Helpdesk",
     "version": "19.0.1.0.2",
     "category": "Services/Helpdesk",

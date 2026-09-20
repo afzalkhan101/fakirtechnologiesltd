@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="portal_my_home_helpdesk" name="Enterprise Helpdesk Portal Home" inherit_id="portal.portal_my_home" priority="35">
-        <!--
-            Odoo 19 always renders portal_common_category. Insert the Helpdesk card
-            directly there so it is visible even when the customer has zero tickets.
-        -->
         <xpath expr="//div[@id='portal_common_category']" position="inside">
             <t t-call="portal.portal_docs_entry">
                 <t t-set="icon" t-value="'/zencore_helpdesk_portal_enterprise/static/src/img/helpdesk-ticket.svg'"/>
