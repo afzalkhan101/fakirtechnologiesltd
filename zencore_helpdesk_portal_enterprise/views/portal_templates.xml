@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_helpdesk" name="Enterprise Helpdesk Portal Home" inherit_id="portal.portal_my_home" priority="35">
+        <!--
+            Odoo 19 always renders portal_common_category. Insert the Helpdesk card
+            directly there so it is visible even when the customer has zero tickets.
+        -->
+        <xpath expr="//div[@id='portal_common_category']" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/zencore_helpdesk_portal_enterprise/static/src/img/helpdesk-ticket.svg'"/>
+                <t t-set="title">Helpdesk Tickets</t>
+                <t t-set="text">Create and follow your support tickets</t>
+                <t t-set="url" t-value="'/my/helpdesk'"/>
+                <t t-set="config_card" t-value="True"/>
+                <t t-set="placeholder_count" t-value="'zc_helpdesk_ticket_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_helpdesk_breadcrumbs" inherit_id="portal.portal_breadcrumbs" priority="35">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name in ['zc_helpdesk_dashboard', 'zc_helpdesk_tickets', 'zc_helpdesk_ticket_new', 'zc_helpdesk_ticket']"
+                t-attf-class="breadcrumb-item #{'active' if page_name == 'zc_helpdesk_dashboard' else ''}">
+                <a t-if="page_name != 'zc_helpdesk_dashboard'" href="/my/helpdesk">Helpdesk</a>
+                <t t-else="">Helpdesk</t>
+            </li>
+            <li t-if="page_name == 'zc_helpdesk_tickets'" class="breadcrumb-item active">Tickets</li>
+            <li t-if="page_name == 'zc_helpdesk_ticket_new'" class="breadcrumb-item active">Create Ticket</li>
+            <li t-if="page_name == 'zc_helpdesk_ticket' and ticket" class="breadcrumb-item active">
+                Ticket #<t t-out="ticket.id"/>
+            </li>
+        </xpath>
+    </template>
+
+    <template id="portal_helpdesk_dashboard" name="My Enterprise Helpdesk">
+        <t t-call="portal.portal_layout">
+            <div class="zc_helpdesk_portal">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                    <div>
+                        <h2 class="mb-1">My Helpdesk</h2>
+                        <p class="text-muted mb-0">Odoo Enterprise Helpdesk tickets, directly in your customer portal.</p>
+                    </div>
+                    <a href="/my/helpdesk/ticket/new" class="btn btn-primary">
+                        <i class="fa fa-plus me-1"/> Create Ticket
+                    </a>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-lg-3"><a href="/my/helpdesk/tickets" class="zc_helpdesk_stat"><span>All Tickets</span><strong t-out="ticket_count"/></a></div>
+                    <div class="col-6 col-lg-3"><a href="/my/helpdesk/tickets?filterby=open" class="zc_helpdesk_stat"><span>Open</span><strong t-out="open_count"/></a></div>
+                    <div class="col-6 col-lg-3"><a href="/my/helpdesk/tickets?filterby=urgent" class="zc_helpdesk_stat"><span>Urgent</span><strong t-out="urgent_count"/></a></div>
+                    <div class="col-6 col-lg-3"><a href="/my/helpdesk/tickets?filterby=closed" class="zc_helpdesk_stat"><span>Closed</span><strong t-out="closed_count"/></a></div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
+                        <div>
+                            <h5 class="mb-1">Enterprise Helpdesk Integration</h5>
+                            <p class="text-muted mb-0">Tickets created here use the native Helpdesk team, stages, SLA policies, assignment rules, tags and chatter.</p>
+                        </div>
+                        <a href="/my/helpdesk/tickets" class="btn btn-outline-primary text-nowrap">View My Tickets</a>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_helpdesk_tickets" name="My Enterprise Helpdesk Tickets">
+        <t t-call="portal.portal_layout">
+            <t t-call="portal.portal_searchbar"><t t-set="title">My Tickets</t></t>
+            <div class="d-flex justify-content-end mb-3">
+                <a href="/my/helpdesk/ticket/new" class="btn btn-primary"><i class="fa fa-plus me-1"/> Create Ticket</a>
+            </div>
+
+            <form action="/my/helpdesk/tickets" method="get" class="mb-3">
+                <input type="hidden" name="sortby" t-att-value="sortby"/>
+                <input type="hidden" name="filterby" t-att-value="filterby"/>
+                <div class="input-group">
+                    <input type="search" name="search" class="form-control" t-att-value="search" placeholder="Search subject, team or category/tag..."/>
+                    <button class="btn btn-outline-primary" type="submit"><i class="fa fa-search"/> Search</button>
+                </div>
+            </form>
+
+            <div t-if="not tickets" class="alert alert-info">No tickets found. <a href="/my/helpdesk/ticket/new" class="alert-link">Create your first ticket</a>.</div>
+
+            <div t-if="tickets" class="table-responsive card border-0 shadow-sm">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light"><tr><th>Ticket</th><th>Subject</th><th>Team</th><th>Priority</th><th>Stage</th><th>Created</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="tickets" t-as="ticket">
+                            <td><a t-att-href="'/my/helpdesk/ticket/%s' % ticket.id" class="fw-semibold">#<t t-out="ticket.id"/></a></td>
+                            <td><a t-att-href="'/my/helpdesk/ticket/%s' % ticket.id" class="text-decoration-none text-body" t-out="ticket.name"/></td>
+                            <td t-out="ticket.team_id.name or '-'"/>
+                            <td>
+                                <span t-if="ticket.priority == '3'" class="badge text-bg-danger">Urgent</span>
+                                <span t-elif="ticket.priority == '2'" class="badge text-bg-warning">High</span>
+                                <span t-elif="ticket.priority == '1'" class="badge text-bg-primary">High</span>
+                                <span t-else="" class="badge text-bg-secondary">Normal</span>
+                            </td>
+                            <td><span class="badge rounded-pill text-bg-light border" t-out="ticket.stage_id.name or '-'"/></td>
+                            <td><span t-field="ticket.create_date" t-options='{"widget": "date"}'/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3" t-if="pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_helpdesk_ticket_new" name="Create Enterprise Helpdesk Ticket">
+        <t t-call="portal.portal_layout">
+            <div class="row justify-content-center">
+                <div class="col-xl-9">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div><h2 class="mb-1">Create Ticket</h2><p class="text-muted mb-0">The ticket will be created directly in Odoo Enterprise Helpdesk.</p></div>
+                        <a href="/my/helpdesk/tickets" class="btn btn-outline-secondary">Back to Tickets</a>
+                    </div>
+                    <div t-if="error" class="alert alert-danger" t-out="error"/>
+                    <form action="/my/helpdesk/ticket/new" method="post" enctype="multipart/form-data" class="card border-0 shadow-sm">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+                                <input type="text" name="subject" class="form-control" required="required" t-att-value="form_values.get('subject', '')" placeholder="Example: Unable to access customer portal"/>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Helpdesk Team <span class="text-danger">*</span></label>
+                                    <select name="team_id" class="form-select" required="required">
+                                        <option value="">Select team...</option>
+                                        <option t-foreach="teams" t-as="team" t-att-value="team.id" t-att-selected="str(team.id) == form_values.get('team_id')"><t t-out="team.name"/></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Category / Tag</label>
+                                    <select name="tag_id" class="form-select">
+                                        <option value="">Select category...</option>
+                                        <option t-foreach="tags" t-as="tag" t-att-value="tag.id" t-att-selected="str(tag.id) == form_values.get('tag_id')"><t t-out="tag.name"/></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Priority</label>
+                                    <select name="priority" class="form-select">
+                                        <option value="0" t-att-selected="not form_values.get('priority') or form_values.get('priority') == '0'">Normal</option>
+                                        <option value="1" t-att-selected="form_values.get('priority') == '1'">High</option>
+                                        <option value="2" t-att-selected="form_values.get('priority') == '2'">Very High</option>
+                                        <option value="3" t-att-selected="form_values.get('priority') == '3'">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                                <textarea name="description" rows="8" class="form-control" required="required" placeholder="Describe the issue, expected result and error message..."><t t-out="form_values.get('description', '')"/></textarea>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label fw-semibold">Attachments</label>
+                                <input type="file" name="attachments" class="form-control" multiple="multiple"/>
+                                <div class="form-text">Screenshots, PDFs and supporting documents can be attached.</div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top p-3 d-flex justify-content-end gap-2">
+                            <a href="/my/helpdesk/tickets" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">Submit Ticket</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_helpdesk_ticket_detail" name="Enterprise Helpdesk Ticket Detail">
+        <t t-call="portal.portal_layout">
+            <div t-if="error" class="alert alert-danger" t-out="error"/>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <div class="text-muted small">Ticket #<t t-out="ticket.id"/></div>
+                                    <h2 class="mb-1" t-out="ticket.name"/>
+                                    <span class="badge rounded-pill text-bg-light border" t-out="ticket.stage_id.name or '-'"/>
+                                </div>
+                                <div>
+                                    <span t-if="ticket.priority == '3'" class="badge text-bg-danger">Urgent</span>
+                                    <span t-elif="ticket.priority == '2'" class="badge text-bg-warning">Very High</span>
+                                    <span t-elif="ticket.priority == '1'" class="badge text-bg-primary">High</span>
+                                    <span t-else="" class="badge text-bg-secondary">Normal</span>
+                                </div>
+                            </div>
+                            <hr/>
+                            <h5>Description</h5>
+                            <div class="zc_helpdesk_description" t-field="ticket.description"/>
+                        </div>
+                    </div>
+
+                    <div id="communication" class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h4 class="mb-3">Communication</h4>
+                            <div t-if="not messages" class="text-muted">No messages yet.</div>
+                            <div t-foreach="messages" t-as="message" class="zc_helpdesk_message">
+                                <div class="d-flex justify-content-between gap-3 mb-2">
+                                    <strong t-out="message.author_id.name or message.email_from or 'Support'"/>
+                                    <small class="text-muted"><span t-field="message.date" t-options='{"widget": "datetime"}'/></small>
+                                </div>
+                                <div class="mb-2" t-field="message.body"/>
+                                <div t-if="message.attachment_ids" class="d-flex flex-wrap gap-2 mt-2">
+                                    <a t-foreach="message.attachment_ids" t-as="attachment"
+                                       t-att-href="'/my/helpdesk/ticket/%s/attachment/%s' % (ticket.id, attachment.id)"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa fa-paperclip me-1"/><t t-out="attachment.name"/>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form t-att-action="'/my/helpdesk/ticket/%s/reply' % ticket.id" method="post" enctype="multipart/form-data" class="card border-0 shadow-sm">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div class="card-body p-4">
+                            <h5>Reply</h5>
+                            <textarea name="message" class="form-control mb-3" rows="5" placeholder="Write your reply..."/>
+                            <input type="file" name="attachments" class="form-control" multiple="multiple"/>
+                        </div>
+                        <div class="card-footer bg-white text-end"><button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane me-1"/> Send Reply</button></div>
+                    </form>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm position-sticky" style="top: 1rem;">
+                        <div class="card-header bg-white fw-semibold">Ticket Information</div>
+                        <div class="card-body">
+                            <dl class="row mb-0 small">
+                                <dt class="col-5 text-muted">Team</dt><dd class="col-7" t-out="ticket.team_id.name or '-'"/>
+                                <dt class="col-5 text-muted">Assigned To</dt><dd class="col-7" t-out="ticket.user_id.name or 'Unassigned'"/>
+                                <dt class="col-5 text-muted">Tags</dt><dd class="col-7" t-out="', '.join(ticket.tag_ids.mapped('name')) or '-'"/>
+                                <dt class="col-5 text-muted">Created</dt><dd class="col-7"><span t-field="ticket.create_date" t-options='{"widget": "datetime"}'/></dd>
+                            </dl>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <form t-if="not ticket.zc_portal_closed" t-att-action="'/my/helpdesk/ticket/%s/close' % ticket.id" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn btn-outline-danger w-100">Close Ticket</button>
+                            </form>
+                            <form t-else="" t-att-action="'/my/helpdesk/ticket/%s/reopen' % ticket.id" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn btn-outline-primary w-100">Reopen Ticket</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

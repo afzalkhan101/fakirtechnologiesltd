@@ -1,0 +1,22 @@
+.zc_helpdesk_portal .zc_helpdesk_stat {
+    display: flex;
+    min-height: 112px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color, #dee2e6);
+    border-radius: .75rem;
+    background: var(--body-bg, #fff);
+    text-decoration: none;
+    color: inherit;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.zc_helpdesk_portal .zc_helpdesk_stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+}
+.zc_helpdesk_portal .zc_helpdesk_stat span { color: #6c757d; }
+.zc_helpdesk_portal .zc_helpdesk_stat strong { font-size: 2rem; line-height: 1; }
+.zc_helpdesk_description img, .zc_helpdesk_message img { max-width: 100%; height: auto; }
+.zc_helpdesk_message { padding: 1rem 0; border-bottom: 1px solid #e9ecef; }
+.zc_helpdesk_message:last-child { border-bottom: 0; }
